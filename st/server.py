@@ -1,5 +1,8 @@
 import boto3
+import typing
+import os
 import time
+import sys
 import streamlit as st
 from langchain.chains import ConversationChain
 from langchain_aws import ChatBedrock
@@ -10,11 +13,20 @@ from mail_tool import send_mailgun_email_tool
 from dashboard import DashboardAgent
 
 from contacts import get_all_contacts
-from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate
 import random
 from you import YouAgent
+from stdout_filterer import RedactPhoneNumbers, RedactEmails
+
+session = boto3.Session(
+    aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.environ.get('AWS_REGION')
+)
 
 st.title("EventDash")
+
+sys.stdout = typing.cast(typing.TextIO, RedactEmails(
+    RedactPhoneNumbers(sys.stdout)))
 
 # Setup bedrock
 bedrock_runtime = boto3.client(
